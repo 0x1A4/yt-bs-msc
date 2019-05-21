@@ -1,17 +1,18 @@
 import os
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+
 cra_folder = 'build'
 app = Flask(__name__, static_folder=cra_folder)
 CORS(app)
-
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.sqlite3'
 routes = ({
     'index': '/',
-    'clients': '/api/clients',
-    'campaigns': '/api/campaigns',
-    'tasks': '/api/tasks',
-    'task': '/api/tasks/<int:id>',
-
+    'clients': '/v1/api/clients',
+    'campaigns': '/v1/api/campaigns',
+    'tasks': '/v1/api/tasks',
+    'task': '/v1/api/tasks/<int:id>',
+    'data-refresh': '/v1/api/data/refresh',
 })
 
 clients = (
@@ -46,6 +47,8 @@ def get_clients():
     return jsonify({
         'ok': True,
         'result': {
+            'message': 'Clients loaded!',
+            'count': clients.__len__(),
             'clients': clients
         }
     })
@@ -61,10 +64,13 @@ def get_client_campaigns():
                 'message': 'Client is not specified!'
             }
         })
+    filtered_campaigns = list(filter(lambda c: c['clientId'] == client, campaigns))
     return jsonify({
         'ok': True,
         'result': {
-            'campaigns': list(filter(lambda c: c['clientId'] == client, campaigns))
+            'message': 'Campaigns found!',
+            'count': filtered_campaigns.__len__(),
+            'campaigns': filtered_campaigns
         }
     })
 
@@ -80,7 +86,7 @@ def get_tasks():
             'name': request.values['name'],
             'status': 'created'
         })
-        return jsonify({'ok': True, 'message': 'Saved!'})
+        return jsonify({'ok': True, 'result': {'message': 'Saved!'}})
     if request.method == 'GET':
         try:
             if 'client' in request.args:
@@ -94,6 +100,8 @@ def get_tasks():
             return jsonify({
                 'ok': True,
                 'result': {
+                    'message': 'Tasks found!',
+                    'count': filtered_tasks.__len__(),
                     'tasks': filtered_tasks
                 }
             })
@@ -108,8 +116,20 @@ def get_tasks():
 
 @app.route(routes['task'], methods=['GET'])
 def get_task_by_id(id):
-    return jsonify(list(filter(lambda t: t['id'] == id, tasks)))
+    return jsonify({
+        'ok': True,
+        'result': {
+            'message': 'Task found!',
+            'task': list(filter(lambda t: t['id'] == id, tasks))
+        }
+    })
+
+
+@app.route(routes['data-refresh'], methods=['POST'])
+def data_refresh():
+    return jsonify({'ok': True, 'result': {'message': 'Clients and campaigns will be updated soon!'}})
 
 
 if __name__ == '__main__':
     app.run(debug=True)
+
