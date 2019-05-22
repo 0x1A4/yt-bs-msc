@@ -8,11 +8,12 @@ CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.sqlite3'
 routes = ({
     'index': '/',
-    'clients': '/v1/api/clients',
-    'campaigns': '/v1/api/campaigns',
-    'tasks': '/v1/api/tasks',
-    'task': '/v1/api/tasks/<int:id>',
-    'data-refresh': '/v1/api/data/refresh',
+    'clients': '/v1/api/clients/',
+    'campaigns': '/v1/api/campaigns/',
+    'tasks': '/v1/api/tasks/',
+    'task': '/v1/api/tasks/<int:id>/',
+    'data-refresh': '/v1/api/data/refresh/',
+    'categories': '/v1/api/categories/'
 })
 
 clients = (
@@ -29,6 +30,10 @@ tasks = [
 campaigns = (
     {'id': 1, 'clientId': 1, 'name': 'Campaign #1'},
     {'id': 2, 'clientId': 2, 'name': 'Campaign #2'},
+)
+categories = (
+    {'id': 1, 'name': 'Category #1'},
+    {'id': 2, 'name': 'Category #2'},
 )
 counter = tasks.__len__()
 
@@ -50,6 +55,18 @@ def get_clients():
             'message': 'Clients loaded!',
             'count': clients.__len__(),
             'clients': clients
+        }
+    })
+
+
+@app.route(routes['categories'], methods=['GET'])
+def get_categories():
+    return jsonify({
+        'ok': True,
+        'result': {
+            'message': 'Categories loaded!',
+            'count': categories.__len__(),
+            'categories': categories
         }
     })
 
@@ -84,7 +101,8 @@ def get_tasks():
             'campaignId': int(request.values['campaign']),
             'dateRange': request.values['dateRange'],
             'name': request.values['name'],
-            'status': 'created'
+            'status': 'created',
+            'categoryId': int(request.values['category'])
         })
         return jsonify({'ok': True, 'result': {'message': 'Saved!'}})
     if request.method == 'GET':
